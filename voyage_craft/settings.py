@@ -75,6 +75,8 @@ MIDDLEWARE = [
 
 ]
 
+CORS_ALLOW_ALL_ORIGINS = True
+
 ROOT_URLCONF = 'voyage_craft.urls'
 
 TEMPLATES = [
