@@ -194,3 +194,71 @@ class PreferenceTestCase(BaseTestCase):
         self.client.force_authenticate(user=None)
         response = self.client.post(self.create_preference_url, self.preference_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class RetrieveUpdateUserViewTestCase(BaseTestCase):
+    def setUp(self):
+        """
+        Set up specific to RetrieveUpdateUserViewTestCase.
+        """
+        super().setUp()
+        self.url = reverse('update_user')
+
+    def test_retrieve_user_details(self):
+        """
+        Given an authenticated user
+        When requesting their details
+        Then the correct user details should be returned
+        And a 200 status code should be returned
+        """
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], self.user.username)
+        self.assertEqual(response.data['email'], self.user.email)
+        self.assertEqual(response.data['first_name'], self.user.first_name)
+        self.assertEqual(response.data['last_name'], self.user.last_name)
+
+    def test_update_user_details(self):
+        """
+        Given an authenticated user
+        When updating their details with valid data
+        Then the user details should be updated
+        And a 200 status code should be returned
+        """
+        updated_data = {
+            'username': 'updateduser',
+            'email': 'updateduser@example.com',
+            'first_name': 'Updated',
+            'last_name': 'User',
+        }
+        response = self.client.patch(self.url, updated_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['username'], 'updateduser')
+        self.assertEqual(response.data['email'], 'updateduser@example.com')
+        self.assertEqual(response.data['first_name'], 'Updated')
+        self.assertEqual(response.data['last_name'], 'User')
+
+        # Ensure the changes are reflected in the database
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.username, 'updateduser')
+        self.assertEqual(self.user.email, 'updateduser@example.com')
+        self.assertEqual(self.user.first_name, 'Updated')
+        self.assertEqual(self.user.last_name, 'User')
+
+    def test_update_user_with_invalid_data(self):
+        """
+        Given an authenticated user
+        When updating their details with invalid data
+        Then the user details should not be updated
+        And a 400 status code should be returned
+        """
+        invalid_data = {
+            'username': '',
+            'email': 'not-an-email',
+            'first_name': '',
+            'last_name': ''
+        }
+        response = self.client.put(self.url, invalid_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('username', response.data)
+        self.assertIn('email', response.data)
