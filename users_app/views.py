@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import User, Preference
 from rest_framework import generics
-from .serializer import UserSerializer, PreferenceSerializer
+from .serializer import UserSerializer, PreferenceSerializer, UserUpdateSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
@@ -10,6 +10,14 @@ class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
+
+
+class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserUpdateSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_object(self):
+        return self.request.user
 
 
 class CreatePreferenceView(generics.ListCreateAPIView):
