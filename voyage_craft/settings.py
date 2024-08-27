@@ -51,17 +51,18 @@ SIMPLE_JWT = {
 # Application definition
 
 INSTALLED_APPS = [
-    'corsheaders',
+    'corsheaders',  # Paquete para manejar CORS
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users_app',
-    'rest_framework',
-    'chatbot'
+    'users_app',  # Asegúrate de que esta aplicación exista
+    'rest_framework',  # Si estás usando Django REST Framework
+    'chatbot',  # Asegúrate de que esta aplicación exista
 ]
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -76,6 +77,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+
 
 ROOT_URLCONF = 'voyage_craft.urls'
 
