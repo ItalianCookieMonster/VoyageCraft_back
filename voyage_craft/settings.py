@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'users_app',
     'rest_framework',
     'destinations',
+    'itinerary'
 
 ]
 
