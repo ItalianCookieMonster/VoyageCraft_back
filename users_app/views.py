@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from .models import User, Preference
 from rest_framework import generics
-from .serializer import UserSerializer, PreferenceSerializer, UserUpdateSerializer
+from .serializers import UserSerializer, PreferenceSerializer, UserUpdateSerializer
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
