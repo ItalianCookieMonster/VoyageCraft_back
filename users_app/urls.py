@@ -12,10 +12,11 @@ urlpatterns = [
     path('user/', views.RetrieveUpdateUserView.as_view(), name="update_user"),
 
     # Preferences management
-    path('preferences/', views.CreatePreferenceView.as_view(), name="preferences"),
+    path('preferences/', views.ManagePreferencesView.as_view(), name="preferences"),
     path('preferences/delete/<int:pk>/', views.DeletePreferenceView.as_view(), name="delete_preference"),
-    path('preferences/update/<int:pk>/', views.UpdatePreferenceView.as_view(), name="update_preference"),
+    path('preferences/get/', views.GetUserPreferencesView.as_view(), name="get_preferences"),
 
     # DRF browsable API login
     path('auth/', include('rest_framework.urls')),
 ]
+

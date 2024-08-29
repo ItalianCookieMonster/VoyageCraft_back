@@ -43,4 +43,18 @@ class PreferenceSerializer(serializers.ModelSerializer):
             'user': {'read_only': True},
         }
 
+    @staticmethod
+    def validate_preference_type(value):
+        allowed_types = [
+            "Preferred Climate",
+            "Preferred Landscape/Scenery",
+            "Type of Tourism",
+            "Travel Duration",
+            "Travel Companions",
+            "Budget Preferences",
+            "Accessibility Needs"
+        ]
+        if value not in allowed_types:
+            raise serializers.ValidationError("Invalid preference type.")
+        return value
 
