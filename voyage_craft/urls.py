@@ -7,4 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path(f'{API_PREFIX}', include('users_app.urls')),
     path(f'{API_PREFIX}', include('destinations.urls')),
+    path(f'{API_PREFIX}', include('itinerary.urls')),
 ]
+
+
