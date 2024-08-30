@@ -1,6 +1,6 @@
-ENGINE ='django.db.backends.sqlite3.postgresql_pyscopg2'
+ENGINE =django.db.backends.postgresql_psycopg2
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_USER=postgres
-DB_PASSWORD=pass
-DB_NAME=name_bbdd
+DB_PASSWORD=password
+DB_NAME=voyage
