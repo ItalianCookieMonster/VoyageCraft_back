@@ -1,12 +1,11 @@
-# -Voyage Craft
+# Voyage Craft
 
 ## Indice 📑
-- [Project Description](#project-description-)
-- [Features](#features-)
-- [Technologies and Libraries Used](#technologies-and-libraries-used-)
-- [Installation](#installation-)
-- [Developers](#developers-)
-
+- Project Description
+- Features
+- Technologies and Libraries Used
+- Installation
+- Developers
 ## Project Description 📖
 
 The VoyageCraft project is developed using Django. This project provides the business logic and necessary endpoints for the frontend, facilitating the creation of a personalized user experience.
