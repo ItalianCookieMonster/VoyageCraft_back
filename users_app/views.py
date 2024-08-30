@@ -1,3 +1,4 @@
+from rest_framework.views import APIView
 from .models import User, Preference
 from rest_framework import generics, status
 from .serializers import UserSerializer, PreferenceSerializer, UserUpdateSerializer
@@ -23,86 +24,67 @@ class RetrieveUpdateUserView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-def _create_preference(preference_type, preference_value, user):
-    serializer = PreferenceSerializer(data={
-        "preference_type": preference_type,
-        "preference_value": preference_value,
-        "user": user.id
-    })
-    if serializer.is_valid():
-        serializer.save(user=user)
-        logger.info(f"Created new preference {preference_type} for user {user.username}.")
-        return True, None
-    else:
-        logger.warning(
-            f"Validation failed for creating preference {preference_type} with value {preference_value}: {serializer.errors}")
-        return False, serializer.errors
+class PreferencesView(APIView):
+    permission_classes = [IsAuthenticated]
 
-
-class ManagePreferencesView(generics.GenericAPIView):
-    serializer_class = PreferenceSerializer
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request, *args, **kwargs):
-        preferences_data = request.data.get('preferences', [])
+    def post(self, request):
         user = request.user
+        data = request.data.get('preferences', [])
+        if not data:
+            return Response({'error': 'No preferences data provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            existing_preferences = self._get_existing_preferences(user)
-            errors = []
+        for pref_data in data:
+            preference_type = pref_data.get('preference_type')
+            if not preference_type:
+                return Response({'error': 'Preference type not provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-            for pref_data in preferences_data:
-                preference_type, preference_value = self._extract_preference_data(pref_data)
-                if not preference_type or not preference_value:
-                    logger.warning(f"Missing preference data for user {user.username}. Skipping.")
-                    continue
+            preference, created = Preference.objects.update_or_create(
+                user=user,
+                preference_type=preference_type,
+                defaults={'preference_value': pref_data.get('preference_value', '')}
+            )
 
-                success, error = self._create_or_update_preference(user, preference_type, preference_value,
-                                                                   existing_preferences)
-                if not success:
-                    errors.append(error)
-
-            if errors:
-                return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
-
-            logger.info(f"Preferences processed successfully for user {user.username}.")
-            return Response({"message": "Preferences processed successfully."}, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            logger.error(f"An unexpected error occurred for user {user.username}: {e}")
-            return Response({"error": "An unexpected error occurred. Please try again later."},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def _get_existing_preferences(self, user):
-        return {pref.preference_type: pref for pref in Preference.objects.filter(user=user)}
-
-    def _extract_preference_data(self, pref_data):
-        return pref_data.get('preference_type'), pref_data.get('preference_value')
-
-    def _create_or_update_preference(self, user, preference_type, preference_value, existing_preferences):
-        try:
-            if preference_type in existing_preferences:
-                preference = existing_preferences[preference_type]
-                return self._update_preference(preference, preference_value, user)
+            if not created:
+                print(f"Preference {preference_type} already exists and was updated for user {user.username}.")
             else:
-                return _create_preference(preference_type, preference_value, user)
-        except Exception as e:
-            logger.error(f"Error processing preference {preference_type} for user {user.username}: {e}")
-            return False, f"Error processing preference {preference_type}: {str(e)}"
+                print(f"Preference {preference_type} created for user {user.username}.")
 
-    def _update_preference(self, preference, preference_value, user):
-        serializer = PreferenceSerializer(preference, data={"preference_value": preference_value}, partial=True)
-        if serializer.is_valid():
-            serializer.save(user=user)
-            logger.info(f"Updated preference {preference.preference_type} for user {user.username}.")
-            return True, None
-        else:
-            logger.warning(
-                f"Validation failed for updating preference {preference.preference_type} with value {preference_value}: {serializer.errors}")
-            return False, serializer.errors
+        return Response({'message': 'Preferences processed successfully.'}, status=status.HTTP_201_CREATED)
+
+    def update(self, request):
+        """
+        Aggiorna le preferenze esistenti per l'utente.
+        """
+        user = request.user
+        data = request.data.get('preferences', [])
+        if not data:
+            return Response({'error': 'No preferences data provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        for pref_data in data:
+            preference_type = pref_data.get('preference_type')
+            if not preference_type:
+                return Response({'error': 'Preference type not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                preference = Preference.objects.get(user=user, preference_type=preference_type)
+            except Preference.DoesNotExist:
+                print(f"Preference with type '{preference_type}' for user '{user.id}' not found.")  # Log per debug
+                return Response({'error': f'Preference type {preference_type} not found for user {user.username}'},
+                                status=status.HTTP_404_NOT_FOUND)
+
+            serializer = PreferenceSerializer(preference, data=pref_data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                print(f"Preference {preference_type} updated successfully.")  # Log per debug
+            else:
+                print(f"Validation errors for {preference_type}: {serializer.errors}")  # Log per debug
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': 'Preferences updated successfully.'}, status=status.HTTP_200_OK)
 
 
 class DeletePreferenceView(generics.DestroyAPIView):
+    queryset = Preference.objects.all()
     serializer_class = PreferenceSerializer
     permission_classes = (IsAuthenticated,)
 

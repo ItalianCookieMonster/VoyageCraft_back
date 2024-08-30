@@ -12,7 +12,7 @@ urlpatterns = [
     path('user/', views.RetrieveUpdateUserView.as_view(), name="update_user"),
 
     # Preferences management
-    path('preferences/', views.ManagePreferencesView.as_view(), name="preferences"),
+    path('preferences/', views.PreferencesView.as_view(), name="preferences"),
     path('preferences/delete/<int:pk>/', views.DeletePreferenceView.as_view(), name="delete_preference"),
     path('preferences/get/', views.GetUserPreferencesView.as_view(), name="get_preferences"),
 
