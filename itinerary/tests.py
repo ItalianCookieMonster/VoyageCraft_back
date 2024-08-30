@@ -6,6 +6,7 @@ from itinerary.models import Itinerary, ItineraryStep
 from users_app.models import User
 from destinations.models import Destination
 
+
 @pytest.mark.django_db
 def test_create_itinerary():
     """
