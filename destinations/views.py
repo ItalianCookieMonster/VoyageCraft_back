@@ -62,8 +62,7 @@ class DestinationRecommendationView(generics.GenericAPIView):
             "recommendations": destination_serializer.data
         }, status=status.HTTP_200_OK)
 
-    @staticmethod
-    def annotate_and_order_destinations(destinations, user_preferences) -> Destination:
+    def annotate_and_order_destinations(self, destinations, user_preferences) -> Destination:
         preference_mapping = {
             'accessibility': 'accessibility',
             'family_friendly': 'family_friendly',
@@ -88,4 +87,4 @@ class DestinationRecommendationView(generics.GenericAPIView):
             )
         )
         destinations = destinations.annotate(relevance=Coalesce(relevance_annotation, 0))
-        return destinations.order_by('-relevance')
+        return destinations.order_by('relevance')
