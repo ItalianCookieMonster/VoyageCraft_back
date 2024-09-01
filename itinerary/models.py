@@ -1,6 +1,8 @@
 from django.db import models
 from users_app.models import User
 from destinations.models import Destination, Activity
+
+
 class Itinerary(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -15,7 +17,6 @@ class Itinerary(models.Model):
         return self.name
 
 
-
 class ItineraryStep(models.Model):
     itinerary = models.ForeignKey(Itinerary, on_delete=models.CASCADE)
     step_order = models.IntegerField()
@@ -27,4 +28,3 @@ class ItineraryStep(models.Model):
 
     def __str__(self):
         return f"Step {self.step_order} of {self.itinerary.name}"
-
