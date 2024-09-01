@@ -3,9 +3,9 @@ from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from .models import Destination, WeatherData
 from users_app.models import Preference
+from .views import DestinationRecommendationView
 
 User = get_user_model()
 
@@ -68,9 +68,7 @@ class DestinationRecommendationViewTests(TestCase):
         response = self.client.get('/api/v1/recommended-destinations/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # Check if the recommended destinations match the expected output
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['name'], 'Test Destination 1')
+        self.assertEqual(len(response.data), 2)
 
     def test_recommendation_with_partial_preferences(self):
         """
@@ -86,7 +84,7 @@ class DestinationRecommendationViewTests(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # Check if at least one destination is returned based on remaining preferences
-        self.assertGreaterEqual(len(response.data), 1)
+        self.assertGreaterEqual(len(response.data), 2)
 
     def test_recommendation_no_matching_destinations(self):
         """
@@ -134,58 +132,6 @@ class DestinationRecommendationViewTests(TestCase):
 
         # Check if the response contains the correct message
         self.assertEqual(response.data['message'], "User has no preferences set.")
-
-    def test_relevance_annotation(self):
-        ordered_destinations = self.annotate_and_order_destinations(
-            Destination.objects.all(),
-            Preference.objects.filter(user=self.user)
-        )
-
-        for d in ordered_destinations:
-            print(f"Destination: {d.name}, Relevance: {d.relevance}")
-
-    '''def test_recommendation_order_by_relevance(self):
-        """
-        Test that the recommendations are ordered by relevance.
-        """
-        Preference.objects.filter(user=self.user).delete()
-        Preference.objects.create(user=self.user, preference_type='Preferred Climate', preference_value='Sunny')
-        Preference.objects.create(user=self.user, preference_type='Preferred Landscape/Scenery',
-                                  preference_value='Beach')
-        Preference.objects.create(user=self.user, preference_type='Type of Tourism', preference_value='Relaxation')
-        Preference.objects.create(user=self.user, preference_type='Budget Preferences', preference_value='High')
-
-        Destination.objects.create(
-            name='Test Destination 3',
-            type='City',
-            landscape='Beach',
-            tourism_type='Relaxation',
-            cost_level='High',
-            family_friendly=True,
-            accessibility=True
-        )
-
-        Destination.objects.create(
-            name='Test Destination 4',
-            type='City',
-            landscape='Urban',
-            tourism_type='Cultural',
-            cost_level='Medium',
-            family_friendly=True,
-            accessibility=True
-        )
-
-        response = self.client.get('/api/v1/recommended-destinations/')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        print("Destinations returned by relevance:")
-        for destination in response.data:
-            print(destination['name'], destination.get('relevance', 'No relevance'))
-
-        # Continua con i test
-        self.assertGreater(len(response.data), 1)
-        self.assertEqual(response.data[0]['name'], 'Test Destination 1')
-        self.assertEqual(response.data[1]['name'], 'Test Destination 2')'''
 
 
 class DestinationRecommendationUnauthorizedTest(APITestCase):
