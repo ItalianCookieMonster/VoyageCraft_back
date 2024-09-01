@@ -52,9 +52,6 @@ class PreferencesView(APIView):
         return Response({'message': 'Preferences processed successfully.'}, status=status.HTTP_201_CREATED)
 
     def update(self, request):
-        """
-        Aggiorna le preferenze esistenti per l'utente.
-        """
         user = request.user
         data = request.data.get('preferences', [])
         if not data:
@@ -68,16 +65,13 @@ class PreferencesView(APIView):
             try:
                 preference = Preference.objects.get(user=user, preference_type=preference_type)
             except Preference.DoesNotExist:
-                print(f"Preference with type '{preference_type}' for user '{user.id}' not found.")  # Log per debug
                 return Response({'error': f'Preference type {preference_type} not found for user {user.username}'},
                                 status=status.HTTP_404_NOT_FOUND)
 
             serializer = PreferenceSerializer(preference, data=pref_data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                print(f"Preference {preference_type} updated successfully.")  # Log per debug
             else:
-                print(f"Validation errors for {preference_type}: {serializer.errors}")  # Log per debug
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': 'Preferences updated successfully.'}, status=status.HTTP_200_OK)
