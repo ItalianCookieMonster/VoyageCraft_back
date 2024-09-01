@@ -22,7 +22,7 @@ class BaseTestCase(APITestCase):
             'preference_type': 'Music',
             'preference_value': 'Jazz'
         }
-        self.client.force_authenticate(user=self.user)  # Authenticate by default
+        self.client.force_authenticate(user=self.user)
         self.create_preference_url = reverse('preferences')
 
     def authenticate_user(self):
@@ -116,50 +116,64 @@ class PreferenceTestCase(BaseTestCase):
         Then the preference should be created
         And a 201 status code should be returned
         """
-        response = self.client.post(self.create_preference_url, self.preference_data, format='json')
+        data = {
+            "preferences": [
+                {
+                    "preference_type": "Music",
+                    "preference_value": "Jazz"
+                }
+            ]
+        }
+
+        response = self.client.post(self.create_preference_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Preference.objects.count(), 1)
-        self.assertEqual(Preference.objects.get().preference_type, 'Music')
+        self.assertEqual(Preference.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(Preference.objects.get().preference_value, 'Jazz')
 
     def test_create_preference_with_invalid_data(self):
         """
         Given an authenticated user
-        And invalid data
-        When creating a new preference
-        Then a 400 status code should be returned
+        When creating a new preference with invalid data
+        Then the preference should not be created
+        And a 400 status code should be returned
         """
-        invalid_data = {'preference_type': '', 'preference_value': ''}
+        invalid_data = {
+            "preferences": [
+                {
+                    "preference_type": "",
+                    "preference_value": ""
+                }
+            ]
+        }
+
         response = self.client.post(self.create_preference_url, invalid_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('preference_type', response.data)
-        self.assertIn('preference_value', response.data)
+
+        self.assertIn('error', response.data)
+        self.assertEqual(response.data['error'], 'Preference type not provided')
 
     def test_update_preference(self):
         """
         Given an authenticated user
-        And an ID of a preference
-        When updating a preference
+        And the user has a preference
+        When calling the PreferencesView
         Then the preference should be updated
-        And a 200 status code should be returned
         """
-        preference = Preference.objects.create(user=self.user, **self.preference_data)
-        url = reverse('update_preference', kwargs={'pk': preference.id})
-        updated_data = {'preference_type': 'Music', 'preference_value': 'Rock'}
-        response = self.client.put(url, updated_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(Preference.objects.get().preference_value, 'Rock')
 
-    def test_update_nonexistent_preference(self):
-        """
-        Given an authenticated user
-        And an ID of a preference that does not exist
-        When updating a preference
-        Then a 404 status code should be returned
-        """
-        url = reverse('update_preference', kwargs={'pk': 999})  # Non-existent ID
-        updated_data = {'preference_type': 'Music', 'preference_value': 'Rock'}
-        response = self.client.put(url, updated_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        preference = Preference.objects.create(user=self.user, **self.preference_data)
+        updated_data = {
+            "preferences": [
+                {
+                    "preference_type": "Music",
+                    "preference_value": "Rock"
+                }
+            ]
+        }
+
+        response = self.client.post(self.create_preference_url, updated_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Preference.objects.get(id=preference.id).preference_value, 'Rock')
 
     def test_delete_preference(self):
         """
@@ -170,9 +184,10 @@ class PreferenceTestCase(BaseTestCase):
         """
         preference = Preference.objects.create(user=self.user, **self.preference_data)
         url = reverse('delete_preference', kwargs={'pk': preference.id})
+
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(Preference.objects.count(), 0)
+        self.assertEqual(Preference.objects.filter(user=self.user).count(), 0)
 
     def test_delete_nonexistent_preference(self):
         """
@@ -181,7 +196,8 @@ class PreferenceTestCase(BaseTestCase):
         When deleting a preference
         Then a 404 status code should be returned
         """
-        url = reverse('delete_preference', kwargs={'pk': 999})  # Non-existent ID
+        url = reverse('delete_preference', kwargs={'pk': 999})  # ID non esistente
+
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -191,7 +207,7 @@ class PreferenceTestCase(BaseTestCase):
         When creating a new preference
         Then a 401 status code should be returned
         """
-        self.client.force_authenticate(user=None)
+        self.client.force_authenticate(user=None)  # Logout
         response = self.client.post(self.create_preference_url, self.preference_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
